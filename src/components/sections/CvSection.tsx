@@ -59,13 +59,17 @@ export default function CvSection() {
 
         const dpr = window.devicePixelRatio || 1;
         const w = container.clientWidth;
+        const targetH = w * (4 / 3);
         const vp = p.getViewport({ scale: 1 });
-        const scale = (w / vp.width) * dpr;
+        const scaleW = w / vp.width;
+        const scaleH = targetH / vp.height;
+        const baseScale = Math.min(scaleW, scaleH);
+        const scale = baseScale * dpr;
         const viewport = p.getViewport({ scale });
 
         canvas.width = viewport.width;
         canvas.height = viewport.height;
-        canvas.style.width = w + "px";
+        canvas.style.width = viewport.width / dpr + "px";
         canvas.style.height = viewport.height / dpr + "px";
 
         await p.render({ canvasContext: canvas.getContext("2d")!, viewport }).promise;
@@ -136,7 +140,7 @@ export default function CvSection() {
           className="relative mt-14"
         >
           <div className="hidden md:block">
-            <div className="absolute -start-4 top-1/2 -translate-y-1/2 space-y-8" dir="ltr">
+            <div className="absolute -start-6 top-1/2 -translate-y-1/2 space-y-6" dir="ltr">
               {metaLabels.slice(0, 3).map((m, i) => (
                 <motion.div
                   key={m.key}
@@ -152,7 +156,7 @@ export default function CvSection() {
               ))}
             </div>
 
-            <div className="absolute -end-4 top-1/2 -translate-y-1/2 space-y-8" dir="ltr">
+            <div className="absolute -end-6 top-1/2 -translate-y-1/2 space-y-6" dir="ltr">
               {metaLabels.slice(3).map((m, i) => (
                 <motion.div
                   key={m.key}
@@ -177,20 +181,22 @@ export default function CvSection() {
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setModalOpen(true); } }}
             aria-label={t.cv.view}
           >
-            <div className="relative overflow-hidden rounded-lg ring-1 ring-white/10 transition-shadow duration-500 group-hover:ring-glow/30 group-hover:shadow-[0_0_60px_rgba(233,237,180,0.12)]">
+            <div className="relative aspect-[3/4] overflow-hidden rounded-lg ring-1 ring-white/10 transition-shadow duration-500 group-hover:ring-glow/30 group-hover:shadow-[0_0_60px_rgba(233,237,180,0.12)]">
               {loading ? (
-                <div className="flex aspect-[3/4] items-center justify-center bg-night-panel">
+                <div className="flex h-full items-center justify-center bg-night-panel">
                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-glow/30 border-t-glow" />
                 </div>
               ) : loadError ? (
-                <div className="flex aspect-[3/4] items-center justify-center bg-night-panel p-8">
+                <div className="flex h-full items-center justify-center bg-night-panel p-8">
                   <div className="text-center">
                     <p className="text-sm text-ink-muted">CV preview unavailable</p>
                     <a href={cvSource} download={CV_DOWNLOAD_NAME} className="mt-3 inline-block text-xs text-glow underline">Download CV</a>
                   </div>
                 </div>
               ) : (
-                <canvas ref={canvasRef} className="block w-full" />
+                <div className="flex h-full items-center justify-center bg-night-panel">
+                  <canvas ref={canvasRef} className="block" />
+                </div>
               )}
 
               <div className="cv-scanner pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
