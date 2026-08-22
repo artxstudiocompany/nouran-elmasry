@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSiteData } from "@/store/DataContext";
 import ImageUploader from "./ImageUploader";
 import SavedIndicator, { useSaveIndicator } from "./SavedIndicator";
+import { clientUpload } from "@/lib/clientUpload";
 import type { Project } from "@/types";
 
 function emptyProject(): Project {
@@ -85,13 +86,9 @@ export default function ProjectsEditor() {
         try {
           const imgBlob = await fetch(finalImageUrl).then((r) => r.blob());
           const imgFile = new File([imgBlob], "project-image.jpg", { type: imgBlob.type });
-          const formData = new FormData();
-          formData.append("file", imgFile);
-          formData.append("folder", "images/projects");
-          const imgRes = await fetch("/api/upload", { method: "POST", body: formData });
-          const imgData = await imgRes.json().catch(() => null);
-          if (imgRes.ok && imgData?.url) finalImageUrl = imgData.url;
-          else show(false, `Image upload failed: ${imgData?.error || `status ${imgRes.status}`}`);
+          const imgResult = await clientUpload(imgFile, "images/projects");
+          if ("url" in imgResult) finalImageUrl = imgResult.url;
+          else show(false, `Image upload failed: ${imgResult.error}`);
         } catch (err) {
           show(false, `Image upload failed: ${err instanceof Error ? err.message : "Unknown"}`);
         }
@@ -99,13 +96,9 @@ export default function ProjectsEditor() {
 
       if (pdfFile) {
         try {
-          const formData = new FormData();
-          formData.append("file", pdfFile);
-          formData.append("folder", "pdfs/projects");
-          const pdfRes = await fetch("/api/upload", { method: "POST", body: formData });
-          const pdfData = await pdfRes.json().catch(() => null);
-          if (pdfRes.ok && pdfData?.url) finalPdfUrl = pdfData.url;
-          else show(false, `PDF upload failed: ${pdfData?.error || `status ${pdfRes.status}`}`);
+          const pdfResult = await clientUpload(pdfFile, "pdfs/projects");
+          if ("url" in pdfResult) finalPdfUrl = pdfResult.url;
+          else show(false, `PDF upload failed: ${pdfResult.error}`);
         } catch (err) {
           show(false, `PDF upload failed: ${err instanceof Error ? err.message : "Unknown"}`);
         }
@@ -204,7 +197,7 @@ export default function ProjectsEditor() {
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                if (file.size > 4 * 1024 * 1024) { alert("PDF too large (max 4MB)"); return; }
+                if (file.size > 50 * 1024 * 1024) { alert("PDF too large (max 50MB)"); return; }
                 setPdfFile(file);
                 const reader = new FileReader();
                 reader.onload = () => setPdfDataUrl(reader.result as string);

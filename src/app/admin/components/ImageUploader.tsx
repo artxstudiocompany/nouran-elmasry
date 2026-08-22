@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { clientUpload } from "@/lib/clientUpload";
 
 interface Props {
   label: string;
@@ -8,36 +9,32 @@ interface Props {
   onChange: (url: string) => void;
   folder?: string;
   accept?: string;
+  maxSizeMB?: number;
 }
 
-export default function ImageUploader({ label, value, onChange, folder = "uploads", accept = "image/*" }: Props) {
+export default function ImageUploader({ label, value, onChange, folder = "uploads", accept = "image/*", maxSizeMB = 50 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleFile = async (file: File) => {
     setError(null);
-    if (file.size > 10 * 1024 * 1024) {
-      setError("File too large (max 10MB)");
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      setError(`File too large (max ${maxSizeMB}MB)`);
       return;
     }
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", folder);
+      const result = await clientUpload(file, folder);
 
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-
-      if (res.ok && data.url) {
-        onChange(data.url);
+      if ("url" in result) {
+        onChange(result.url);
       } else {
-        setError(data.error || "Upload failed");
+        setError(result.error || "Upload failed");
       }
-    } catch {
-      setError("Upload failed");
+    } catch (err) {
+      setError(`Upload failed: ${err instanceof Error ? err.message : "Unknown"}`);
     } finally {
       setUploading(false);
     }

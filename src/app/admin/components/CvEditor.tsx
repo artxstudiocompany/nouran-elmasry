@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useSiteData } from "@/store/DataContext";
 import SavedIndicator, { useSaveIndicator } from "./SavedIndicator";
+import { clientUpload } from "@/lib/clientUpload";
 
 export default function CvEditor() {
   const data = useSiteData();
@@ -19,24 +20,19 @@ export default function CvEditor() {
       alert("Please upload a PDF file");
       return;
     }
-    if (file.size > 4 * 1024 * 1024) {
-      alert("File size must be less than 4MB");
+    if (file.size > 50 * 1024 * 1024) {
+      alert("File size must be less than 50MB");
       return;
     }
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "pdfs/cv");
+      const result = await clientUpload(file, "pdfs/cv");
 
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const result = await res.json().catch(() => null);
-
-      if (res.ok && result?.url) {
+      if ("url" in result) {
         setCvFile(result.url);
       } else {
-        alert(result?.error || `Upload failed (status ${res.status})`);
+        alert(result.error || "Failed to upload file");
       }
     } catch (err) {
       alert(`Upload failed: ${err instanceof Error ? err.message : "Unknown error"}`);
