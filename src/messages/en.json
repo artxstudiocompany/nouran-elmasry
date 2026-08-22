@@ -1,0 +1,110 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "expertise": "Expertise",
+    "specialties": "Expertise",
+    "projects": "Projects",
+    "experience": "Experience",
+    "contact": "Contact",
+    "cv": "CV"
+  },
+  "hero": {
+    "tagline": "When Engineering Becomes Art.",
+    "subtitle": "MEP Engineer",
+    "description": "Designing building systems with a vision that combines precision, coordination, and beauty.",
+    "cta1": "Get In Touch",
+    "cta2": "Explore Projects",
+    "scroll": "Scroll to explore"
+  },
+  "about": {
+    "title": "About",
+    "name": "Eng/Nouran El-Masry",
+    "bio": "I am an MEP engineer who transforms architectural plans into living systems that work silently inside buildings — HVAC that breathes, precisely calculated water networks, and efficiently distributed power.",
+    "bioExtra": "I start by understanding how every space is used before drawing a single line, then build the 3D model and resolve clashes with other disciplines early, so drawings arrive at site ready and clear.",
+    "bioFinal": "My belief is that good engineering is invisible, but felt by everyone who enters the space.",
+    "stats": {
+      "projects": "Projects Delivered",
+      "experience": "Years Experience",
+      "clients": "Clients",
+      "commitment": "Code Compliance"
+    }
+  },
+  "expertise": {
+    "title": "Expertise"
+  },
+  "specialties": {
+    "title": "Expertise"
+  },
+  "projects": {
+    "title": "Projects",
+    "viewProject": "View Project",
+    "overview": "Project Overview",
+    "scope": "Scope",
+    "systems": "MEP Systems",
+    "toolsUsed": "Tools Used",
+    "gallery": "Gallery",
+    "close": "Close"
+  },
+  "visualization": {
+    "title": "Beyond the Blueprint",
+    "description": "Discover what lies behind the walls — systems working together to create extraordinary buildings.",
+    "layers": {
+      "architecture": "Architecture",
+      "hvac": "HVAC",
+      "electrical": "Electrical",
+      "plumbing": "Plumbing",
+      "fireFighting": "Fire Fighting"
+    }
+  },
+  "experience": {
+    "title": "Experience"
+  },
+  "skills": {
+    "title": "Tools"
+  },
+  "cv": {
+    "overline": "01 / PROFESSIONAL FILE",
+    "title": "PROFESSIONAL FILE",
+    "subtitle": "An engineering journey defined by precision.",
+    "description": "Explore the professional profile of Eng/Nouran El-Masry.",
+    "view": "VIEW CV",
+    "download": "DOWNLOAD CV",
+    "close": "CLOSE",
+    "zoomIn": "ZOOM IN",
+    "zoomOut": "ZOOM OUT",
+    "prevPage": "PREVIOUS PAGE",
+    "nextPage": "NEXT PAGE",
+    "meta": {
+      "document": "DOCUMENT",
+      "documentValue": "PROFESSIONAL CV",
+      "profile": "PROFILE",
+      "profileValue": "ENG/NOURAN EL-MASRY",
+      "specialization": "SPECIALIZATION",
+      "specializationValue": "MEP ENGINEERING",
+      "file": "FILE",
+      "fileValue": "NE-CV-2026",
+      "status": "STATUS",
+      "statusValue": "PROFESSIONAL PROFILE"
+    }
+  },
+  "contact": {
+    "title": "Contact",
+    "description": "Have a project that needs MEP design or a drawing review? Send the details and I will get back to you within two business days.",
+    "name": "Name",
+    "email": "Email",
+    "subject": "Subject",
+    "message": "Project Details",
+    "send": "Send Message",
+    "sending": "Sending...",
+    "success": "Message Sent",
+    "successDetail": "I will reach out to you on the email you entered shortly.",
+    "error": "Please complete your name, a valid email, and a brief project description.",
+    "linkedin": "LinkedIn",
+    "whatsapp": "WhatsApp",
+    "phone": "Phone"
+  },
+  "footer": {
+    "copyright": "© 2026 Eng/Nouran El-Masry — MEP Engineer"
+  }
+}

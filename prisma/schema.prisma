@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Profile {
+  id        String   @id @default("default")
+  name      String   @default("")
+  nameAr    String   @default("")
+  title     String   @default("")
+  titleAr   String   @default("")
+  tagline   String   @default("")
+  taglineAr String   @default("")
+  bio       String   @default("")
+  bioAr     String   @default("")
+  email     String   @default("")
+  phone     String   @default("")
+  linkedin  String   @default("")
+  whatsapp  String   @default("")
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id         String   @id @default(uuid())
+  type       String   @default("")
+  typeAr     String   @default("")
+  category   String   @default("")
+  categoryAr String   @default("")
+  scope      String   @default("")
+  scopeAr    String   @default("")
+  systems    String   @default("[]")
+  systemsAr  String   @default("[]")
+  imageUrl   String?
+  pdfUrl     String?
+  year       String   @default("")
+  area       String   @default("")
+  order      Int      @default(0)
+  published  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Experience {
+  id            String   @id @default(uuid())
+  year          String   @default("")
+  position      String   @default("")
+  positionAr    String   @default("")
+  company       String   @default("")
+  companyAr     String   @default("")
+  description   String   @default("")
+  descriptionAr String   @default("")
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Skill {
+  id         String @id @default(uuid())
+  name       String @default("")
+  category   String @default("")
+  categoryAr String @default("")
+  order      Int    @default(0)
+}
+
+model Specialty {
+  id            String @id @default(uuid())
+  title         String @default("")
+  titleAr       String @default("")
+  description   String @default("")
+  descriptionAr String @default("")
+  icon          String @default("")
+  order         Int    @default(0)
+}
+
+model SiteSettings {
+  id             String   @id @default("default")
+  heroLogoUrl    String   @default("/images/logo.png")
+  heroBgUrl      String   @default("/images/hero-plate.jpg")
+  aboutBgUrl     String   @default("/images/about-plate.jpg")
+  cvFileUrl      String   @default("")
+  translationsEn String   @default("{}")
+  translationsAr String   @default("{}")
+  updatedAt      DateTime @updatedAt
+}
