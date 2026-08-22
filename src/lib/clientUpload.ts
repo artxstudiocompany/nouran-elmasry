@@ -30,19 +30,8 @@ export async function clientUpload(
   const pathname = `${folder}/${safeName}-${timestamp}.${ext}`;
 
   try {
-    const tokenRes = await fetch("/api/upload/client-token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pathname }),
-    });
-
-    const tokenData = await tokenRes.json().catch(() => null);
-    if (!tokenRes.ok || !tokenData?.clientToken) {
-      return { error: tokenData?.error || `Token request failed (${tokenRes.status})` };
-    }
-
     const result = await upload(pathname, file, {
-      clientToken: tokenData.clientToken,
+      handleUploadUrl: "/api/upload/handle",
       access: "public",
     });
 
