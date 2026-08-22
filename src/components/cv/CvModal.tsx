@@ -22,6 +22,7 @@ export default function CvModal({ isOpen, onClose, pdfUrl, downloadName }: CvMod
   const [total, setTotal] = useState(0);
   const [zoom, setZoom] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const minZoom = 0.5;
   const maxZoom = 3;
@@ -51,20 +52,23 @@ export default function CvModal({ isOpen, onClose, pdfUrl, downloadName }: CvMod
 
     const load = async () => {
       setLoading(true);
+      setLoadError(false);
       setPage(1);
       setZoom(1);
 
-      const pdfjsLib = await import("pdfjs-dist");
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
-
       try {
-        const doc = await pdfjsLib.getDocument(pdfUrl).promise;
+        const { loadPdfDocument } = await import("@/lib/pdfHelper");
+        const { doc } = await loadPdfDocument(pdfUrl, 20000);
         if (cancelled) { doc.destroy(); return; }
         docRef.current = doc;
         setTotal(doc.numPages);
         setLoading(false);
-      } catch {
-        if (!cancelled) setLoading(false);
+      } catch (err) {
+        console.error("CV modal load failed:", err);
+        if (!cancelled) {
+          setLoadError(true);
+          setLoading(false);
+        }
       }
     };
 
@@ -192,6 +196,13 @@ export default function CvModal({ isOpen, onClose, pdfUrl, downloadName }: CvMod
             {loading ? (
               <div className="flex h-40 items-center justify-center">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-glow/30 border-t-glow" />
+              </div>
+            ) : loadError ? (
+              <div className="flex h-40 items-center justify-center">
+                <div className="text-center">
+                  <p className="text-sm text-ink-muted">Failed to load PDF</p>
+                  <a href={pdfUrl} download={downloadName} className="mt-3 inline-block text-xs text-glow underline">Download instead</a>
+                </div>
               </div>
             ) : (
               <motion.div

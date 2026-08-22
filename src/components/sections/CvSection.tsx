@@ -26,6 +26,7 @@ export default function CvSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const docRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [cvSource, setCvSource] = useState(DEFAULT_CV);
 
@@ -34,6 +35,7 @@ export default function CvSection() {
 
     const load = async () => {
       setLoading(true);
+      setLoadError(false);
 
       let source = DEFAULT_CV;
       if (cvFile) {
@@ -43,18 +45,9 @@ export default function CvSection() {
       if (cancelled) return;
       setCvSource(source);
 
-      const pdfjsLib = await import("pdfjs-dist");
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
-
       try {
-        let docData: any;
-        if (source.startsWith("data:")) {
-          docData = { data: Uint8Array.from(atob(source.split(",")[1]), (c) => c.charCodeAt(0)) };
-        } else {
-          docData = { url: source };
-        }
-
-        const doc = await pdfjsLib.getDocument(docData).promise;
+        const { loadPdfDocument } = await import("@/lib/pdfHelper");
+        const { doc } = await loadPdfDocument(source, 15000);
         if (cancelled) { doc.destroy(); return; }
         docRef.current = doc;
 
@@ -77,8 +70,12 @@ export default function CvSection() {
 
         await p.render({ canvasContext: canvas.getContext("2d")!, viewport }).promise;
         if (!cancelled) setLoading(false);
-      } catch {
-        if (!cancelled) setLoading(false);
+      } catch (err) {
+        console.error("CV load failed:", err);
+        if (!cancelled) {
+          setLoadError(true);
+          setLoading(false);
+        }
       }
     };
 
@@ -184,6 +181,13 @@ export default function CvSection() {
               {loading ? (
                 <div className="flex aspect-[3/4] items-center justify-center bg-night-panel">
                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-glow/30 border-t-glow" />
+                </div>
+              ) : loadError ? (
+                <div className="flex aspect-[3/4] items-center justify-center bg-night-panel p-8">
+                  <div className="text-center">
+                    <p className="text-sm text-ink-muted">CV preview unavailable</p>
+                    <a href={cvSource} download={CV_DOWNLOAD_NAME} className="mt-3 inline-block text-xs text-glow underline">Download CV</a>
+                  </div>
                 </div>
               ) : (
                 <canvas ref={canvasRef} className="block w-full" />

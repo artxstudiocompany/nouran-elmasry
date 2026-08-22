@@ -14,33 +14,30 @@ export default function PdfPreview({ pdfUrl, className = "" }: Props) {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const docRef = useRef<any>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
-      const pdfjsLib = await import("pdfjs-dist");
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
-
       setLoading(true);
+      setLoadError(false);
       setPage(1);
 
-      let data: any;
-      if (pdfUrl.startsWith("data:")) {
-        data = { data: Uint8Array.from(atob(pdfUrl.split(",")[1]), (c) => c.charCodeAt(0)) };
-      } else {
-        data = { url: pdfUrl };
-      }
-
       try {
-        const doc = await pdfjsLib.getDocument(data).promise;
-        if (cancelled) { if (doc.destroy) doc.destroy(); return; }
+        const { loadPdfDocument } = await import("@/lib/pdfHelper");
+        const { doc } = await loadPdfDocument(pdfUrl, 15000);
+        if (cancelled) { doc.destroy(); return; }
         docRef.current = doc;
         setTotal(doc.numPages);
         setLoading(false);
-      } catch {
-        if (!cancelled) setLoading(false);
+      } catch (err) {
+        console.error("PDF preview load failed:", err);
+        if (!cancelled) {
+          setLoadError(true);
+          setLoading(false);
+        }
       }
     };
 
@@ -85,6 +82,14 @@ export default function PdfPreview({ pdfUrl, className = "" }: Props) {
     return (
       <div className={`flex items-center justify-center bg-night-panel ${className}`}>
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-glow/30 border-t-glow" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className={`flex items-center justify-center bg-night-panel ${className}`}>
+        <span className="text-sm text-ink-muted">PDF unavailable</span>
       </div>
     );
   }
