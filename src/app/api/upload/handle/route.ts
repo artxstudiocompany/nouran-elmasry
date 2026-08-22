@@ -7,6 +7,7 @@ export async function POST(req: Request) {
 
     const result = await handleUpload({
       body,
+      request: req,
       token: process.env.BLOB_READ_WRITE_TOKEN!,
       onBeforeGenerateToken: async (pathname) => {
         if (!pathname.startsWith("images/") && !pathname.startsWith("pdfs/") && !pathname.startsWith("uploads/")) {
