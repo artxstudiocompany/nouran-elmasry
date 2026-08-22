@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSiteData } from "@/store/DataContext";
-import SavedIndicator, { useSaveIndicator, serverErrorMessage } from "./SavedIndicator";
+import SavedIndicator, { useSaveIndicator } from "./SavedIndicator";
 
 export default function SkillsEditor() {
   const { skills, refresh } = useSiteData();
@@ -19,15 +19,16 @@ export default function SkillsEditor() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newSkill.trim() }),
       });
+      const data = await res.json().catch(() => null);
       if (res.ok) {
         show(true, "Skill added!");
         setNewSkill("");
         await refresh();
       } else {
-        show(false, await serverErrorMessage(res, "Failed to add skill"));
+        show(false, data?.error || `Server error (${res.status})`);
       }
-    } catch {
-      show(false, "Network error");
+    } catch (err) {
+      show(false, `Network error: ${err instanceof Error ? err.message : "Unknown"}`);
     } finally {
       setSaving(false);
     }
@@ -36,14 +37,15 @@ export default function SkillsEditor() {
   const remove = async (id: string) => {
     try {
       const res = await fetch(`/api/skills/${id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => null);
       if (res.ok) {
         show(true, "Skill removed!");
         await refresh();
       } else {
-        show(false, await serverErrorMessage(res, "Failed to remove skill"));
+        show(false, data?.error || `Server error (${res.status})`);
       }
-    } catch {
-      show(false, "Network error");
+    } catch (err) {
+      show(false, `Network error: ${err instanceof Error ? err.message : "Unknown"}`);
     }
   };
 

@@ -19,8 +19,8 @@ export default function CvEditor() {
       alert("Please upload a PDF file");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      alert("File size must be less than 10MB");
+    if (file.size > 4 * 1024 * 1024) {
+      alert("File size must be less than 4MB");
       return;
     }
 
@@ -31,15 +31,15 @@ export default function CvEditor() {
       formData.append("folder", "pdfs/cv");
 
       const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const result = await res.json();
+      const result = await res.json().catch(() => null);
 
-      if (res.ok && result.url) {
+      if (res.ok && result?.url) {
         setCvFile(result.url);
       } else {
-        alert(result.error || "Failed to upload file");
+        alert(result?.error || `Upload failed (status ${res.status})`);
       }
-    } catch {
-      alert("Failed to upload file");
+    } catch (err) {
+      alert(`Upload failed: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
       setUploading(false);
     }

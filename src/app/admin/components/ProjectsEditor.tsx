@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSiteData } from "@/store/DataContext";
 import ImageUploader from "./ImageUploader";
-import SavedIndicator, { useSaveIndicator, serverErrorMessage } from "./SavedIndicator";
+import SavedIndicator, { useSaveIndicator } from "./SavedIndicator";
 import type { Project } from "@/types";
 
 function emptyProject(): Project {
@@ -36,15 +36,15 @@ export default function ProjectsEditor() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       });
-      if (res.ok) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data) {
         await refresh();
-        const data = await res.json();
         setEditing({ ...emptyProject(), id: data.id });
       } else {
-        show(false, await serverErrorMessage(res, "Failed to add project"));
+        show(false, data?.error || `Server error (${res.status})`);
       }
-    } catch {
-      show(false, "Network error");
+    } catch (err) {
+      show(false, `Network error: ${err instanceof Error ? err.message : "Unknown"}`);
     }
   };
 
@@ -58,14 +58,15 @@ export default function ProjectsEditor() {
     if (!confirm("Delete this project?")) return;
     try {
       const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => null);
       if (res.ok) {
         show(true, "Project deleted!");
         await refresh();
       } else {
-        show(false, await serverErrorMessage(res, "Failed to delete project"));
+        show(false, data?.error || `Server error (${res.status})`);
       }
-    } catch {
-      show(false, "Network error");
+    } catch (err) {
+      show(false, `Network error: ${err instanceof Error ? err.message : "Unknown"}`);
     }
   };
 
@@ -81,23 +82,33 @@ export default function ProjectsEditor() {
       let finalPdfUrl = editing.pdfUrl || "";
 
       if (finalImageUrl && finalImageUrl.startsWith("blob:")) {
-        const imgBlob = await fetch(finalImageUrl).then((r) => r.blob());
-        const imgFile = new File([imgBlob], "project-image.jpg", { type: imgBlob.type });
-        const formData = new FormData();
-        formData.append("file", imgFile);
-        formData.append("folder", "images/projects");
-        const imgRes = await fetch("/api/upload", { method: "POST", body: formData });
-        const imgData = await imgRes.json();
-        if (imgRes.ok) finalImageUrl = imgData.url;
+        try {
+          const imgBlob = await fetch(finalImageUrl).then((r) => r.blob());
+          const imgFile = new File([imgBlob], "project-image.jpg", { type: imgBlob.type });
+          const formData = new FormData();
+          formData.append("file", imgFile);
+          formData.append("folder", "images/projects");
+          const imgRes = await fetch("/api/upload", { method: "POST", body: formData });
+          const imgData = await imgRes.json().catch(() => null);
+          if (imgRes.ok && imgData?.url) finalImageUrl = imgData.url;
+          else show(false, `Image upload failed: ${imgData?.error || `status ${imgRes.status}`}`);
+        } catch (err) {
+          show(false, `Image upload failed: ${err instanceof Error ? err.message : "Unknown"}`);
+        }
       }
 
       if (pdfFile) {
-        const formData = new FormData();
-        formData.append("file", pdfFile);
-        formData.append("folder", "pdfs/projects");
-        const pdfRes = await fetch("/api/upload", { method: "POST", body: formData });
-        const pdfData = await pdfRes.json();
-        if (pdfRes.ok) finalPdfUrl = pdfData.url;
+        try {
+          const formData = new FormData();
+          formData.append("file", pdfFile);
+          formData.append("folder", "pdfs/projects");
+          const pdfRes = await fetch("/api/upload", { method: "POST", body: formData });
+          const pdfData = await pdfRes.json().catch(() => null);
+          if (pdfRes.ok && pdfData?.url) finalPdfUrl = pdfData.url;
+          else show(false, `PDF upload failed: ${pdfData?.error || `status ${pdfRes.status}`}`);
+        } catch (err) {
+          show(false, `PDF upload failed: ${err instanceof Error ? err.message : "Unknown"}`);
+        }
       }
 
       const projectData = {
@@ -130,13 +141,14 @@ export default function ProjectsEditor() {
         });
       }
 
-      show(res.ok, res.ok ? "Project saved!" : await serverErrorMessage(res, "Failed to save project"));
+      const resData = await res.json().catch(() => null);
+      show(res.ok, res.ok ? "Project saved!" : (resData?.error || `Server error (${res.status})`));
       if (res.ok) {
         setEditing(null);
         await refresh();
       }
-    } catch {
-      show(false, "Network error");
+    } catch (err) {
+      show(false, `Save failed: ${err instanceof Error ? err.message : "Unknown"}`);
     } finally {
       setSaving(false);
     }
@@ -192,7 +204,7 @@ export default function ProjectsEditor() {
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                if (file.size > 10 * 1024 * 1024) { alert("PDF too large (max 10MB)"); return; }
+                if (file.size > 4 * 1024 * 1024) { alert("PDF too large (max 4MB)"); return; }
                 setPdfFile(file);
                 const reader = new FileReader();
                 reader.onload = () => setPdfDataUrl(reader.result as string);

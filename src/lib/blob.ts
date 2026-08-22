@@ -1,7 +1,7 @@
 import { put, del } from "@vercel/blob";
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
-const MAX_PDF_SIZE = 10 * 1024 * 1024;
+const MAX_PDF_SIZE = 4 * 1024 * 1024;
 
 const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSiteData } from "@/store/DataContext";
-import SavedIndicator, { useSaveIndicator, serverErrorMessage } from "./SavedIndicator";
+import SavedIndicator, { useSaveIndicator } from "./SavedIndicator";
 import type { Experience } from "@/types";
 
 function emptyExp(): Experience {
@@ -29,15 +29,15 @@ export default function ExperienceEditor() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       });
-      if (res.ok) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data) {
         await refresh();
-        const data = await res.json();
         setEditing({ ...e, id: data.id });
       } else {
-        show(false, await serverErrorMessage(res, "Failed to add entry"));
+        show(false, data?.error || `Server error (${res.status})`);
       }
-    } catch {
-      show(false, "Network error");
+    } catch (err) {
+      show(false, `Network error: ${err instanceof Error ? err.message : "Unknown"}`);
     }
   };
 
@@ -45,14 +45,15 @@ export default function ExperienceEditor() {
     if (!confirm("Delete this entry?")) return;
     try {
       const res = await fetch(`/api/experience/${id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => null);
       if (res.ok) {
         show(true, "Entry deleted!");
         await refresh();
       } else {
-        show(false, await serverErrorMessage(res, "Failed to delete entry"));
+        show(false, data?.error || `Server error (${res.status})`);
       }
-    } catch {
-      show(false, "Network error");
+    } catch (err) {
+      show(false, `Network error: ${err instanceof Error ? err.message : "Unknown"}`);
     }
   };
 
@@ -88,13 +89,14 @@ export default function ExperienceEditor() {
         });
       }
 
-      show(res.ok, res.ok ? "Experience saved!" : await serverErrorMessage(res, "Failed to save experience"));
+      const resData = await res.json().catch(() => null);
+      show(res.ok, res.ok ? "Experience saved!" : (resData?.error || `Server error (${res.status})`));
       if (res.ok) {
         setEditing(null);
         await refresh();
       }
-    } catch {
-      show(false, "Network error");
+    } catch (err) {
+      show(false, `Save failed: ${err instanceof Error ? err.message : "Unknown"}`);
     } finally {
       setSaving(false);
     }
