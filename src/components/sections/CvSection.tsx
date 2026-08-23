@@ -145,7 +145,7 @@ export default function CvSection() {
           >
             <div className="relative aspect-[3/4] overflow-hidden rounded-lg ring-1 ring-white/10 transition-shadow duration-500 group-hover:ring-glow/30 group-hover:shadow-[0_0_60px_rgba(233,237,180,0.12)]">
               <iframe
-                src={`${cvFile}#toolbar=0&navpanes=0&scrollbar=0`}
+                src={`${cvFile}#page=1&toolbar=0&navpanes=0&scrollbar=0`}
                 className="absolute inset-0 h-[150%] w-full border-0 bg-night-panel"
                 style={{ transform: "scale(0.667)", transformOrigin: "top left" }}
                 title="CV Preview"
