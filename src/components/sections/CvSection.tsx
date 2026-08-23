@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useI18n } from "@/i18n/provider";
 import { useSiteData } from "@/store/DataContext";
@@ -21,105 +21,7 @@ export default function CvSection() {
   const { dir, t } = useI18n();
   const { cvFile } = useSiteData();
   const isRtl = dir === "rtl";
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const docRef = useRef<any>(null);
-  const renderTaskRef = useRef<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-
-  const renderPdf = useCallback(async (doc: any, containerWidth: number) => {
-    if (!canvasRef.current || !containerRef.current || containerWidth <= 0) return;
-
-    const p = await doc.getPage(1);
-    const canvas = canvasRef.current;
-    const dpr = window.devicePixelRatio || 1;
-    const vp = p.getViewport({ scale: 1 });
-
-    const scaleW = containerWidth / vp.width;
-    const scale = scaleW * dpr;
-    const viewport = p.getViewport({ scale });
-
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    canvas.style.width = containerWidth + "px";
-    canvas.style.height = (viewport.height / dpr) + "px";
-
-    if (renderTaskRef.current) {
-      try { renderTaskRef.current.cancel(); } catch {}
-    }
-
-    renderTaskRef.current = p.render({ canvasContext: canvas.getContext("2d")!, viewport });
-    await renderTaskRef.current.promise;
-  }, []);
-
-  useEffect(() => {
-    if (!cvFile) {
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      setLoading(true);
-      setLoadError(false);
-
-      if (cancelled) return;
-
-      const container = containerRef.current;
-      const w = container?.clientWidth ?? 0;
-      const effectiveW = w > 0 ? w : 448;
-
-      try {
-        const { loadPdfDocument } = await import("@/lib/pdfHelper");
-        const { doc } = await loadPdfDocument(cvFile, 15000);
-        if (cancelled) { doc.destroy(); return; }
-        docRef.current = doc;
-
-        await renderPdf(doc, effectiveW);
-        if (!cancelled) setLoading(false);
-      } catch (err) {
-        console.error("CV load failed:", err);
-        if (!cancelled) {
-          setLoadError(true);
-          setLoading(false);
-        }
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-      if (renderTaskRef.current) {
-        try { renderTaskRef.current.cancel(); } catch {}
-      }
-      if (docRef.current?.destroy) docRef.current.destroy();
-      docRef.current = null;
-    };
-  }, [cvFile, renderPdf]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || !docRef.current) return;
-
-    let observed = false;
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const w = entry.contentBoxSize?.[0]?.inlineSize ?? entry.contentRect.width;
-        if (w > 0 && !observed) {
-          observed = true;
-          renderPdf(docRef.current, w).catch(() => {});
-          break;
-        }
-      }
-    });
-
-    ro.observe(container);
-    return () => ro.disconnect();
-  }, [loading, renderPdf]);
 
   if (!cvFile) {
     return (
@@ -234,7 +136,6 @@ export default function CvSection() {
           </div>
 
           <div
-            ref={containerRef}
             className="group relative mx-auto max-w-md cursor-pointer"
             onClick={() => setModalOpen(true)}
             role="button"
@@ -243,22 +144,13 @@ export default function CvSection() {
             aria-label={t.cv.view}
           >
             <div className="relative aspect-[3/4] overflow-hidden rounded-lg ring-1 ring-white/10 transition-shadow duration-500 group-hover:ring-glow/30 group-hover:shadow-[0_0_60px_rgba(233,237,180,0.12)]">
-              {loading ? (
-                <div className="flex h-full items-center justify-center bg-night-panel">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-glow/30 border-t-glow" />
-                </div>
-              ) : loadError ? (
-                <div className="flex h-full items-center justify-center bg-night-panel p-8">
-                  <div className="text-center">
-                    <p className="text-sm text-ink-muted">CV preview unavailable</p>
-                    <a href={cvFile} download={CV_DOWNLOAD_NAME} className="mt-3 inline-block text-xs text-glow underline">Download CV</a>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex h-full items-center justify-center overflow-hidden bg-night-panel">
-                  <canvas ref={canvasRef} className="block" />
-                </div>
-              )}
+              <iframe
+                src={`${cvFile}#toolbar=0&navpanes=0&scrollbar=0`}
+                className="absolute inset-0 h-[150%] w-full border-0 bg-night-panel"
+                style={{ transform: "scale(0.667)", transformOrigin: "top left" }}
+                title="CV Preview"
+                loading="lazy"
+              />
 
               <div className="cv-scanner pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
