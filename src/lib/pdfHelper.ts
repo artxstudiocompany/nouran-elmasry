@@ -26,7 +26,13 @@ export async function loadPdfDocument(
   );
 
   const doc = await Promise.race([
-    pdfjsLib.getDocument({ ...docData, isEvalSupported: false }).promise,
+    pdfjsLib.getDocument({
+      ...docData,
+      isEvalSupported: false,
+      cMapUrl: "/cmaps/",
+      cMapPacked: true,
+      standardFontDataUrl: "/standard_fonts/",
+    }).promise,
     timeoutPromise,
   ]);
 
