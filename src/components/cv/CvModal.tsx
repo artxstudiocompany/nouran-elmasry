@@ -28,19 +28,26 @@ export default function CvModal({ isOpen, onClose, pdfUrl, downloadName }: CvMod
   const maxZoom = 3;
   const zoomStep = 0.25;
 
+  const renderTaskRef = useRef<any>(null);
+
   const renderPage = useCallback(
-    async (doc: any, pageNum: number, scale: number) => {
+    async (doc: any, pageNum: number) => {
       if (!canvasRef.current || !containerRef.current) return;
       const p = await doc.getPage(pageNum);
       const canvas = canvasRef.current;
-      const container = containerRef.current;
       const dpr = window.devicePixelRatio || 1;
-      const vp = p.getViewport({ scale: 1.2 * scale * dpr });
+      const vp = p.getViewport({ scale: dpr });
+
+      if (renderTaskRef.current) {
+        try { renderTaskRef.current.cancel(); } catch {}
+      }
+
       canvas.width = vp.width;
       canvas.height = vp.height;
       canvas.style.width = vp.width / dpr + "px";
       canvas.style.height = vp.height / dpr + "px";
-      await p.render({ canvasContext: canvas.getContext("2d")!, viewport: vp }).promise;
+      renderTaskRef.current = p.render({ canvasContext: canvas.getContext("2d")!, viewport: vp });
+      await renderTaskRef.current.promise;
     },
     []
   );
@@ -76,6 +83,9 @@ export default function CvModal({ isOpen, onClose, pdfUrl, downloadName }: CvMod
 
     return () => {
       cancelled = true;
+      if (renderTaskRef.current) {
+        try { renderTaskRef.current.cancel(); } catch {}
+      }
       if (docRef.current?.destroy) docRef.current.destroy();
       docRef.current = null;
     };
@@ -83,8 +93,8 @@ export default function CvModal({ isOpen, onClose, pdfUrl, downloadName }: CvMod
 
   useEffect(() => {
     if (!docRef.current || loading) return;
-    renderPage(docRef.current, page, zoom);
-  }, [page, zoom, loading, renderPage]);
+    renderPage(docRef.current, page);
+  }, [page, loading, renderPage]);
 
   useEffect(() => {
     if (isOpen) {

@@ -26,7 +26,7 @@ export async function loadPdfDocument(
   );
 
   const doc = await Promise.race([
-    pdfjsLib.getDocument(docData).promise,
+    pdfjsLib.getDocument({ ...docData, isEvalSupported: false }).promise,
     timeoutPromise,
   ]);
 
