@@ -46,8 +46,22 @@ export default function CvEditor() {
   };
 
   const handleSave = async () => {
-    const ok = await data.updateCvFile(cvFile);
-    show(ok);
+    try {
+      const res = await fetch("/api/settings/cv", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cvFileUrl: cvFile }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        show(false, body?.error || `Server error ${res.status}`);
+        return;
+      }
+      await data.updateCvFile(cvFile);
+      show(true);
+    } catch (err) {
+      show(false, `Network error: ${err instanceof Error ? err.message : "Unknown"}`);
+    }
   };
 
   const input =

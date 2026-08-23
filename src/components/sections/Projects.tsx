@@ -30,12 +30,12 @@ export default function Projects() {
             >
               <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-night-panel to-night-deep">
                 {project.pdfUrl ? (
-                  <PdfPreview pdfUrl={project.pdfUrl} className="h-full w-full" />
+                  <PdfPreview pdfUrl={project.pdfUrl} className="h-full w-full relative z-20" />
                 ) : project.imageUrl ? (
                   <img src={project.imageUrl} alt="" className="h-full w-full object-cover" />
                 ) : null}
-                <div className="absolute inset-0 bg-gradient-to-t from-night-deep/70 via-transparent to-transparent" />
-                <div className="absolute bottom-3 flex gap-2">
+                <div className="absolute inset-0 z-10 bg-gradient-to-t from-night-deep/70 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute bottom-3 z-30 flex gap-2">
                   <span className="rounded-full bg-glow/15 px-3 py-1 font-latin text-xs text-glow ring-1 ring-glow/25">
                     {project.year}
                   </span>
