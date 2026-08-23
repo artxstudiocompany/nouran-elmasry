@@ -232,8 +232,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
               heroBgUrl: next.heroBackground,
               aboutBgUrl: next.aboutBackground,
               cvFileUrl: next.cvFile,
-              translationsEn: JSON.stringify(next.translations.en),
-              translationsAr: JSON.stringify(next.translations.ar),
+              ...(patch.translations !== undefined
+                ? {
+                    translationsEn: JSON.stringify(next.translations.en),
+                    translationsAr: JSON.stringify(next.translations.ar),
+                  }
+                : {}),
             })
           : null,
         patch.profile !== undefined
@@ -277,7 +281,11 @@ function parseJsonObject<T>(raw: string | null | undefined, fallback: T): T {
   if (!raw) return fallback;
   try {
     const parsed = JSON.parse(raw);
-    return typeof parsed === "object" && parsed !== null ? parsed : fallback;
+    if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+      if (Object.keys(parsed).length === 0) return fallback;
+      return parsed;
+    }
+    return fallback;
   } catch {
     return fallback;
   }

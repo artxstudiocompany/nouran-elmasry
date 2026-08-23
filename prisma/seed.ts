@@ -1,5 +1,10 @@
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import * as fs from "fs";
+import * as path from "path";
+import { config } from "dotenv";
+
+config({ path: path.join(__dirname, "..", ".env") });
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
@@ -28,12 +33,24 @@ async function main() {
   });
   console.log("  ✓ Profile");
 
+  const enPath = path.join(__dirname, "..", "src", "messages", "en.json");
+  const arPath = path.join(__dirname, "..", "src", "messages", "ar.json");
+  const enTranslations = fs.readFileSync(enPath, "utf-8");
+  const arTranslations = fs.readFileSync(arPath, "utf-8");
+
   await prisma.siteSettings.upsert({
     where: { id: "default" },
-    update: {},
-    create: { id: "default" },
+    update: {
+      translationsEn: enTranslations,
+      translationsAr: arTranslations,
+    },
+    create: {
+      id: "default",
+      translationsEn: enTranslations,
+      translationsAr: arTranslations,
+    },
   });
-  console.log("  ✓ SiteSettings");
+  console.log("  ✓ SiteSettings (with translations)");
 
   const projects = [
     {

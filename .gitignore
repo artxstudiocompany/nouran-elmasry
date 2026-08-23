@@ -56,3 +56,6 @@ CLAUDE.md
 
 # old UI backup
 New UI/
+
+.vercel
+.env*
