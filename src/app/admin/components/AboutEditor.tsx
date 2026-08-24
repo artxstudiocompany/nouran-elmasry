@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useSiteData } from "@/store/DataContext";
+import enMessages from "@/messages/en.json";
+import arMessages from "@/messages/ar.json";
 import ImageUploader from "./ImageUploader";
 import SavedIndicator, { useSaveIndicator, serverErrorMessage } from "./SavedIndicator";
 
@@ -10,8 +12,36 @@ export default function AboutEditor() {
   const { saved, show } = useSaveIndicator();
 
   const [aboutBackground, setAboutBg] = useState(data.aboutBackground);
-  const [en, setEn] = useState({ ...data.translations.en.about });
-  const [ar, setAr] = useState({ ...data.translations.ar.about });
+
+  const defaultEn = enMessages.about;
+  const defaultAr = arMessages.about;
+  const rawEn = data.translations.en.about;
+  const rawAr = data.translations.ar.about;
+
+  const [en, setEn] = useState({
+    ...defaultEn,
+    ...rawEn,
+    stats: {
+      ...defaultEn.stats,
+      ...(rawEn.stats || {}),
+      values: {
+        ...defaultEn.stats.values,
+        ...((rawEn.stats || {}).values || {}),
+      },
+    },
+  });
+  const [ar, setAr] = useState({
+    ...defaultAr,
+    ...rawAr,
+    stats: {
+      ...defaultAr.stats,
+      ...(rawAr.stats || {}),
+      values: {
+        ...defaultAr.stats.values,
+        ...((rawAr.stats || {}).values || {}),
+      },
+    },
+  });
   const [saving, setSaving] = useState(false);
 
   const input =
