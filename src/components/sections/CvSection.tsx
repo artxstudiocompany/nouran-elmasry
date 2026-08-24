@@ -18,110 +18,30 @@ const metaKeys = [
 ] as const;
 
 function CvPagePreview({ pdfUrl }: { pdfUrl: string }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const docRef = useRef<any>(null);
-  const [aspectRatio, setAspectRatio] = useState<number>(1.414);
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState(false);
-  const renderTaskRef = useRef<any>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const { loadPdfDocument } = await import("@/lib/pdfHelper");
-        const { doc } = await loadPdfDocument(pdfUrl, 15000);
-        if (cancelled) { doc.destroy(); return; }
-        if (docRef.current?.destroy) docRef.current.destroy();
-        docRef.current = doc;
-        setReady(true);
-        setError(false);
-      } catch (err) {
-        console.error("CV preview load failed:", err);
-        if (!cancelled) { setError(true); setReady(false); }
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-      if (renderTaskRef.current) { renderTaskRef.current.cancel(); renderTaskRef.current = null; }
-      if (docRef.current?.destroy) { docRef.current.destroy(); docRef.current = null; }
-      setReady(false);
-    };
+    setLoaded(false);
   }, [pdfUrl]);
-
-  useEffect(() => {
-    const doc = docRef.current;
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!doc || !canvas || !container || !ready) return;
-
-    let cancelled = false;
-
-    const render = async () => {
-      try {
-        const page = await doc.getPage(1);
-        if (cancelled) return;
-
-        const dpr = window.devicePixelRatio || 1;
-        const containerWidth = container.clientWidth;
-        const baseViewport = page.getViewport({ scale: 1 });
-        const ratio = baseViewport.height / baseViewport.width;
-        setAspectRatio(ratio);
-
-        const scale = (containerWidth / baseViewport.width) * dpr;
-        const viewport = page.getViewport({ scale });
-
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        canvas.style.width = containerWidth + "px";
-        canvas.style.height = containerWidth * ratio + "px";
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx || cancelled) return;
-
-        if (renderTaskRef.current) { renderTaskRef.current.cancel(); renderTaskRef.current = null; }
-        const task = page.render({ canvasContext: ctx, viewport });
-        renderTaskRef.current = task;
-        await task.promise;
-        renderTaskRef.current = null;
-      } catch (err: any) {
-        if (err?.name === "RenderingCancelledException") return;
-        console.error("CV preview render failed:", err);
-      }
-    };
-
-    render();
-
-    return () => {
-      cancelled = true;
-      if (renderTaskRef.current) { renderTaskRef.current.cancel(); renderTaskRef.current = null; }
-    };
-  }, [ready]);
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full overflow-hidden rounded-lg bg-night-panel"
-      style={{ aspectRatio: `1 / ${aspectRatio}` }}
+      className="relative w-full overflow-hidden bg-night-panel"
+      style={{ aspectRatio: "1 / 1.414" }}
     >
-      {!ready && !error && (
+      {!loaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-night-panel">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-glow/30 border-t-glow" />
         </div>
       )}
-      {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-night-panel">
-          <span className="text-sm text-ink-muted">PDF</span>
-        </div>
-      )}
-      <canvas
-        ref={canvasRef}
-        className={`block w-full ${!ready || error ? "invisible" : ""}`}
+      <iframe
+        src={`${pdfUrl}#page=1&toolbar=0&navpanes=0&scrollbar=0`}
+        className="absolute inset-0 h-full w-full border-0 bg-white"
+        title="CV Preview"
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
       />
     </div>
   );
