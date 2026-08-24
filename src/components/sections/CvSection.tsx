@@ -176,11 +176,16 @@ export default function CvSection() {
             <div className="relative overflow-hidden rounded-lg ring-1 ring-white/10 transition-shadow duration-500 group-hover:ring-glow/30 group-hover:shadow-[0_0_60px_rgba(233,237,180,0.12)]">
               <CvPagePreview pdfUrl={cvFile} />
 
-              <div className="cv-scanner pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div
+                className="absolute inset-0 z-10 cursor-pointer"
+                onClick={() => setModalOpen(true)}
+              />
 
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-night-deep/60 via-night-deep/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="pointer-events-none absolute inset-0 z-20 cv-scanner opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-night-deep/60 via-night-deep/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                 <div className="flex items-center gap-2 rounded-full bg-night-deep/80 px-5 py-2.5 text-sm font-medium text-glow ring-1 ring-glow/30 backdrop-blur-sm">
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
