@@ -9,10 +9,10 @@ export default function About() {
   const { aboutBackground, profile } = useSiteData();
 
   const statsData = [
-    { value: "+3", label: t.about.stats.experience },
-    { value: "+15", label: t.about.stats.projects },
-    { value: "+10", label: t.about.stats.clients },
-    { value: "%100", label: t.about.stats.commitment },
+    { value: t.about.stats.values.experience, label: t.about.stats.experience },
+    { value: t.about.stats.values.projects, label: t.about.stats.projects },
+    { value: t.about.stats.values.clients, label: t.about.stats.clients },
+    { value: t.about.stats.values.commitment, label: t.about.stats.commitment },
   ];
 
   return (

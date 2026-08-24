@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import PasswordGate from "./components/PasswordGate";
 import AdminLayout from "./components/AdminLayout";
 import ProfileEditor from "./components/ProfileEditor";
+import AboutEditor from "./components/AboutEditor";
 import ProjectsEditor from "./components/ProjectsEditor";
 import ExperienceEditor from "./components/ExperienceEditor";
 import SkillsEditor from "./components/SkillsEditor";
@@ -36,6 +37,7 @@ export default function AdminPage() {
       {(tab) => {
         switch (tab) {
           case "profile": return <ProfileEditor />;
+          case "about": return <AboutEditor />;
           case "projects": return <ProjectsEditor />;
           case "experience": return <ExperienceEditor />;
           case "skills": return <SkillsEditor />;

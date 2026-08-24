@@ -2,10 +2,11 @@
 
 import { useState, type ReactNode } from "react";
 
-type Tab = "profile" | "projects" | "experience" | "skills" | "cv" | "translations";
+type Tab = "profile" | "about" | "projects" | "experience" | "skills" | "cv" | "translations";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "profile", label: "Profile & Images" },
+  { key: "about", label: "About" },
   { key: "projects", label: "Projects" },
   { key: "experience", label: "Experience" },
   { key: "skills", label: "Skills" },

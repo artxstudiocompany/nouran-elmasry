@@ -27,7 +27,13 @@
       "projects": "مشروعًا منفذًا",
       "experience": "سنوات خبرة",
       "clients": "عميل",
-      "commitment": "التزام بالكودات"
+      "commitment": "التزام بالكودات",
+      "values": {
+        "experience": "+3",
+        "projects": "+15",
+        "clients": "+10",
+        "commitment": "%100"
+      }
     }
   },
   "expertise": {

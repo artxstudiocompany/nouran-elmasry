@@ -27,7 +27,13 @@
       "projects": "Projects Delivered",
       "experience": "Years Experience",
       "clients": "Clients",
-      "commitment": "Code Compliance"
+      "commitment": "Code Compliance",
+      "values": {
+        "experience": "+3",
+        "projects": "+15",
+        "clients": "+10",
+        "commitment": "%100"
+      }
     }
   },
   "expertise": {
