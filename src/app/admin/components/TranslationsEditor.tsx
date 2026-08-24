@@ -5,9 +5,9 @@ import { useSiteData } from "@/store/DataContext";
 import SavedIndicator, { useSaveIndicator, serverErrorMessage } from "./SavedIndicator";
 import enMessages from "@/messages/en.json";
 
-type Section = "nav" | "hero" | "about" | "expertise" | "projects" | "visualization" | "experience" | "skills" | "contact" | "footer" | "cv";
+type Section = "nav" | "hero" | "expertise" | "projects" | "visualization" | "experience" | "skills" | "contact" | "footer" | "cv";
 
-const SECTIONS: Section[] = ["nav", "hero", "about", "expertise", "projects", "visualization", "experience", "skills", "contact", "footer", "cv"];
+const SECTIONS: Section[] = ["nav", "hero", "expertise", "projects", "visualization", "experience", "skills", "contact", "footer", "cv"];
 
 function flatten(obj: Record<string, any>, prefix = ""): Record<string, string> {
   const result: Record<string, string> = {};
