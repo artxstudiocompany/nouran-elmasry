@@ -19,10 +19,54 @@ const metaKeys = [
 
 function CvPagePreview({ pdfUrl }: { pdfUrl: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [loaded, setLoaded] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const docRef = useRef<any>(null);
 
   useEffect(() => {
-    setLoaded(false);
+    let cancelled = false;
+
+    const load = async () => {
+      setLoading(true);
+      setError(false);
+      try {
+        const { loadPdfDocument } = await import("@/lib/pdfHelper");
+        const { doc } = await loadPdfDocument(pdfUrl, 10000);
+        if (cancelled) { doc.destroy(); return; }
+        docRef.current = doc;
+        const page = await doc.getPage(1);
+        if (cancelled) return;
+
+        const canvas = canvasRef.current;
+        const container = containerRef.current;
+        if (!canvas || !container) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        const w = container.clientWidth;
+        const vp = page.getViewport({ scale: 1 });
+        const scale = (w / vp.width) * dpr;
+        const viewport = page.getViewport({ scale });
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = w + "px";
+        canvas.style.height = (viewport.height / dpr) + "px";
+
+        await page.render({ canvasContext: canvas.getContext("2d")!, viewport }).promise;
+        if (!cancelled) setLoading(false);
+      } catch (err) {
+        console.error("CV preview load failed:", err);
+        if (!cancelled) { setError(true); setLoading(false); }
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+      if (docRef.current?.destroy) docRef.current.destroy();
+      docRef.current = null;
+    };
   }, [pdfUrl]);
 
   return (
@@ -31,18 +75,17 @@ function CvPagePreview({ pdfUrl }: { pdfUrl: string }) {
       className="relative w-full overflow-hidden bg-night-panel"
       style={{ aspectRatio: "1 / 1.414" }}
     >
-      {!loaded && (
+      {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-night-panel">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-glow/30 border-t-glow" />
         </div>
       )}
-      <iframe
-        src={`${pdfUrl}#page=1&toolbar=0&navpanes=0&scrollbar=0`}
-        className="absolute inset-0 h-full w-full border-0 bg-white"
-        title="CV Preview"
-        loading="lazy"
-        onLoad={() => setLoaded(true)}
-      />
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-night-panel">
+          <span className="text-sm text-ink-muted">PDF unavailable</span>
+        </div>
+      )}
+      <canvas ref={canvasRef} className="block w-full" />
     </div>
   );
 }
