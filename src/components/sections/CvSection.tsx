@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useI18n } from "@/i18n/provider";
 import { useSiteData } from "@/store/DataContext";
@@ -22,66 +22,86 @@ function CvPagePreview({ pdfUrl }: { pdfUrl: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const docRef = useRef<any>(null);
   const [aspectRatio, setAspectRatio] = useState<number>(1.414);
-  const [loading, setLoading] = useState(true);
+  const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
+  const renderTaskRef = useRef<any>(null);
 
-  const renderPage = useCallback(async () => {
-    if (!canvasRef.current || !containerRef.current) return;
+  useEffect(() => {
+    let cancelled = false;
 
-    setLoading(true);
-    setError(false);
+    const load = async () => {
+      try {
+        const { loadPdfDocument } = await import("@/lib/pdfHelper");
+        const { doc } = await loadPdfDocument(pdfUrl, 15000);
+        if (cancelled) { doc.destroy(); return; }
+        if (docRef.current?.destroy) docRef.current.destroy();
+        docRef.current = doc;
+        setReady(true);
+        setError(false);
+      } catch (err) {
+        console.error("CV preview load failed:", err);
+        if (!cancelled) { setError(true); setReady(false); }
+      }
+    };
 
-    try {
-      const { loadPdfDocument } = await import("@/lib/pdfHelper");
-      const { doc } = await loadPdfDocument(pdfUrl, 15000);
-      docRef.current = doc;
+    load();
 
-      const page = await doc.getPage(1);
-      const dpr = window.devicePixelRatio || 1;
-      const containerWidth = containerRef.current.clientWidth;
-      const viewport = page.getViewport({ scale: 1 });
-      const ratio = viewport.height / viewport.width;
-      setAspectRatio(ratio);
-
-      const scale = (containerWidth / viewport.width) * dpr;
-      const scaledViewport = page.getViewport({ scale });
-
-      const canvas = canvasRef.current;
-      canvas.width = scaledViewport.width;
-      canvas.height = scaledViewport.height;
-      canvas.style.width = containerWidth + "px";
-      canvas.style.height = containerWidth * ratio + "px";
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      await page.render({ canvasContext: ctx, viewport: scaledViewport }).promise;
-      setLoading(false);
-    } catch (err) {
-      console.error("CV preview render failed:", err);
-      setError(true);
-      setLoading(false);
-    }
+    return () => {
+      cancelled = true;
+      if (renderTaskRef.current) { renderTaskRef.current.cancel(); renderTaskRef.current = null; }
+      if (docRef.current?.destroy) { docRef.current.destroy(); docRef.current = null; }
+      setReady(false);
+    };
   }, [pdfUrl]);
 
   useEffect(() => {
-    renderPage();
-    return () => {
-      if (docRef.current?.destroy) docRef.current.destroy();
-      docRef.current = null;
-    };
-  }, [renderPage]);
-
-  useEffect(() => {
+    const doc = docRef.current;
+    const canvas = canvasRef.current;
     const container = containerRef.current;
-    if (!container) return;
+    if (!doc || !canvas || !container || !ready) return;
 
-    const observer = new ResizeObserver(() => {
-      if (!loading && !error) renderPage();
-    });
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [loading, error, renderPage]);
+    let cancelled = false;
+
+    const render = async () => {
+      try {
+        const page = await doc.getPage(1);
+        if (cancelled) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        const containerWidth = container.clientWidth;
+        const baseViewport = page.getViewport({ scale: 1 });
+        const ratio = baseViewport.height / baseViewport.width;
+        setAspectRatio(ratio);
+
+        const scale = (containerWidth / baseViewport.width) * dpr;
+        const viewport = page.getViewport({ scale });
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = containerWidth + "px";
+        canvas.style.height = containerWidth * ratio + "px";
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx || cancelled) return;
+
+        if (renderTaskRef.current) { renderTaskRef.current.cancel(); renderTaskRef.current = null; }
+        const task = page.render({ canvasContext: ctx, viewport });
+        renderTaskRef.current = task;
+        await task.promise;
+        renderTaskRef.current = null;
+      } catch (err: any) {
+        if (err?.name === "RenderingCancelledException") return;
+        console.error("CV preview render failed:", err);
+      }
+    };
+
+    render();
+
+    return () => {
+      cancelled = true;
+      if (renderTaskRef.current) { renderTaskRef.current.cancel(); renderTaskRef.current = null; }
+    };
+  }, [ready]);
 
   return (
     <div
@@ -89,11 +109,9 @@ function CvPagePreview({ pdfUrl }: { pdfUrl: string }) {
       className="relative w-full overflow-hidden rounded-lg bg-night-panel"
       style={{ aspectRatio: `1 / ${aspectRatio}` }}
     >
-      {loading && (
+      {!ready && !error && (
         <div className="absolute inset-0 flex items-center justify-center bg-night-panel">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-glow/30 border-t-glow" />
-          </div>
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-glow/30 border-t-glow" />
         </div>
       )}
       {error && (
@@ -103,7 +121,7 @@ function CvPagePreview({ pdfUrl }: { pdfUrl: string }) {
       )}
       <canvas
         ref={canvasRef}
-        className={`block w-full ${loading || error ? "invisible" : ""}`}
+        className={`block w-full ${!ready || error ? "invisible" : ""}`}
       />
     </div>
   );

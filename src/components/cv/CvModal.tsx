@@ -36,7 +36,7 @@ export default function CvModal({ isOpen, onClose, pdfUrl, downloadName }: CvMod
     if (!doc || !canvas || !container) return;
 
     if (renderTaskRef.current) {
-      renderTaskRef.current.cancel();
+      try { await renderTaskRef.current.promise; } catch {}
       renderTaskRef.current = null;
     }
 
@@ -57,7 +57,7 @@ export default function CvModal({ isOpen, onClose, pdfUrl, downloadName }: CvMod
       canvas.style.height = (containerWidth * (baseViewport.height / baseViewport.width) * currentZoom) + "px";
 
       const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+      if (!ctx) { setPageLoading(false); return; }
 
       const task = pdfPage.render({ canvasContext: ctx, viewport });
       renderTaskRef.current = task;
@@ -65,7 +65,10 @@ export default function CvModal({ isOpen, onClose, pdfUrl, downloadName }: CvMod
       renderTaskRef.current = null;
       setPageLoading(false);
     } catch (err: any) {
-      if (err?.name === "RenderingCancelledException") return;
+      if (err?.name === "RenderingCancelledException") {
+        setPageLoading(false);
+        return;
+      }
       console.error("CV page render failed:", err);
       setPageLoading(false);
     }
@@ -96,14 +99,17 @@ export default function CvModal({ isOpen, onClose, pdfUrl, downloadName }: CvMod
   useEffect(() => {
     if (!isOpen) {
       document.body.style.overflow = "";
-      if (docRef.current?.destroy) {
-        docRef.current.destroy();
-        docRef.current = null;
-      }
-      if (renderTaskRef.current) {
-        renderTaskRef.current.cancel();
-        renderTaskRef.current = null;
-      }
+      const cleanup = async () => {
+        if (renderTaskRef.current) {
+          try { await renderTaskRef.current.promise; } catch {}
+          renderTaskRef.current = null;
+        }
+        if (docRef.current?.destroy) {
+          docRef.current.destroy();
+          docRef.current = null;
+        }
+      };
+      cleanup();
       return;
     }
 
@@ -112,10 +118,17 @@ export default function CvModal({ isOpen, onClose, pdfUrl, downloadName }: CvMod
 
     return () => {
       document.body.style.overflow = "";
-      if (docRef.current?.destroy) {
-        docRef.current.destroy();
-        docRef.current = null;
-      }
+      const cleanup = async () => {
+        if (renderTaskRef.current) {
+          try { await renderTaskRef.current.promise; } catch {}
+          renderTaskRef.current = null;
+        }
+        if (docRef.current?.destroy) {
+          docRef.current.destroy();
+          docRef.current = null;
+        }
+      };
+      cleanup();
     };
   }, [isOpen, pdfUrl, loadDocument]);
 
